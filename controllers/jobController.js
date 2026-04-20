@@ -43,3 +43,40 @@ exports.createOffer = async (req, res) => {
         res.status(500).json({ error: "Erreur lors de la création de l'offre" });
     }
 };
+
+
+//delete an offer by id
+exports.deleteOffer = async (req, res) => {
+    try {
+        
+        const jobId = parseInt(req.params.id); 
+
+        
+        const job = await prisma.job.findUnique({
+            where: { id: jobId }
+        });
+
+        if (!job) {
+            return res.status(404).json({ error: "Offre non trouvée." });
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { id: req.user.id }
+        });
+
+        if (user.role === 'CANDIDAT' || user.companyId !== job.companyId) {
+            return res.status(403).json({ error: "Accès refusé. Vous ne pouvez pas supprimer cette offre." });
+        }
+
+        // 4. Perform the delete
+        await prisma.job.delete({
+            where: { id: jobId }
+        });
+
+        res.status(200).json({ message: "Offre d'emploi supprimée avec succès" });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Erreur lors de la suppression de l'offre" });
+    }
+};
