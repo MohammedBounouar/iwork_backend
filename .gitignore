@@ -1,5 +1,23 @@
-node_modules
-# Keep environment variables out of version control
+# Dépendances
+node_modules/
+
+# Environnement
 .env
 
-/generated/prisma
+# --- UPLOADS ---
+# On ignore la racine du dossier uploads et ses sous-dossiers
+uploads/CVs/*
+uploads/logos/*
+
+# On autorise uniquement les fichiers .gitkeep pour garder la structure
+!uploads/CVs/.gitkeep
+!uploads/logos/.gitkeep
+
+# --- PRISMA ---
+# On ignore les fichiers SQLite si tu en utilises
+*.db
+*.db-journal
+
+# On GARDE les migrations (important pour l'équipe) mais on ignore le dossier généré
+# Si tu as personnalisé le dossier de sortie du client prisma :
+node_modules/.prisma
