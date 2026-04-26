@@ -8,6 +8,8 @@ const userRoutes = require('./routes/userRoutes');
 const categoryRoutes = require('./routes/categoryRoutes'); 
 const companyRoutes = require('./routes/companyRoutes'); 
 const jobRoutes = require('./routes/jobRoutes');
+const applicationsRoutes = require('./routes/applicationsRoutes');
+
 const CATEGORIES = require('./constants/categories');
 
 const app = express();
@@ -22,6 +24,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/jobs', jobRoutes);
+app.use('/api/apps', applicationsRoutes);
 
 // Category Synchronization Logic
 async function syncCategories() {

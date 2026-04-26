@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
 const { authMiddleware } = require('../middleware/authMiddleware');
+const upload = require('../middleware/uploadConfig');
+
 
 // --- AUTHENTICATION (Public) ---
 router.post('/register', userController.register);
@@ -15,5 +17,8 @@ router.get('/me', authMiddleware, userController.getMe);
 router.get('/profile', authMiddleware, (req, res) => {
     res.json({ message: "Welcome!", user: req.user });
 }); 
+
+// Route pour uploader ou mettre à jour le CV du profil
+router.post('/upload-cv', authMiddleware, upload.single('cv'), userController.uploadProfileCV);
 
 module.exports = router;

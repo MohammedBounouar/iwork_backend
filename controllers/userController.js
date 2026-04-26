@@ -1,7 +1,7 @@
 const prisma = require('../config/prisma');
 const bcrypt = require('bcrypt');
 const jwt    = require('jsonwebtoken');
-
+const fs     = require('fs');
 
 // Get current user profile
 exports.getMe = async (req, res) => {
@@ -55,8 +55,8 @@ exports.getUserById = async (req, res) => {
     }
 };
 
-// Créer un utilisateur:
 
+// Créer un utilisateur:
 exports.register = async (req, res) => {
     try {
         const { email, password, firstName, lastName, role } = req.body;
@@ -140,6 +140,7 @@ exports.createRH = async (req, res) => {
     }
 };
 
+
 //login
 exports.login = async (req, res) => {
     try {
@@ -177,5 +178,28 @@ exports.login = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Erreur serveur" });
+    }
+};
+
+
+exports.uploadProfileCV = async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ error: "Fichier manquant" });
+
+        const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+
+        // OPTIONNEL : Supprimer l'ancien fichier s'il existe
+        if (user.curriculum_vitae && fs.existsSync(user.curriculum_vitae)) {
+            fs.unlinkSync(user.curriculum_vitae); 
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { id: req.user.id },
+            data: { curriculum_vitae: req.file.path }
+        });
+
+        res.status(200).json({ message: "CV mis à jour", cv: updatedUser.curriculum_vitae });
+    } catch (error) {
+        res.status(500).json({ error: "Erreur lors de l'upload" });
     }
 };
