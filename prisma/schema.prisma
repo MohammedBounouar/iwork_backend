@@ -24,6 +24,11 @@ model User {
   lastName       String?
   role           Role          @default(CANDIDAT)
 
+  // --- LOGIQUE DE DÉPARTEMENT ---
+  // Un RH est affecté à une catégorie (Département)
+  assignedCategoryId Int?
+  assignedCategory   Category?   @relation(fields: [assignedCategoryId], references: [id])
+
   // --- CV LOGIC ---
   // On stocke le chemin local (ex: "uploads/CVs/cv-123.pdf")
   curriculum_vitae String?     
@@ -66,6 +71,7 @@ model Category {
   id    Int    @id @default(autoincrement())
   name  String @unique
   jobs  Job[]
+  users User[]
 }
 
 model Job {

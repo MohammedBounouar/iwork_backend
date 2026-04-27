@@ -181,6 +181,63 @@ exports.login = async (req, res) => {
     }
 };
 
+/**
+ * @desc    Permet à un ADMIN d'ajouter un membre RH à son entreprise
+ * @route   POST /api/admin/create-hr
+ * @access  Private (ADMIN uniquement)
+ */
+exports.createHR = async (req, res) => {
+    try {
+        const { email, password, firstName, lastName, assignedCategoryId } = req.body;
+        const admin = req.user; // Récupéré via le middleware d'authentification
+
+        // 1. Vérification de sécurité : Seul un ADMIN peut créer un HR
+        if (admin.role !== 'ADMIN') {
+            return res.status(403).json({ error: "Accès refusé. Seul l'administrateur peut créer des comptes RH." });
+        }
+
+        // 2. Vérifier si l'utilisateur existe déjà
+        const existingUser = await prisma.user.findUnique({ where: { email } });
+        if (existingUser) {
+            return res.status(400).json({ error: "Un utilisateur avec cet email existe déjà." });
+        }
+
+        // 3. Hachage du mot de passe
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // 4. Création du compte HR
+        // On lie l'HR à la même entreprise que l'Admin (admin.companyId)
+        // On lui assigne sa catégorie de département
+        const newHR = await prisma.user.create({
+            data: {
+                email,
+                password: hashedPassword,
+                firstName,
+                lastName,
+                role: 'HR',
+                companyId: admin.companyId, // Liaison automatique à l'entreprise
+                adminId: admin.id,        // Liaison hiérarchique à l'admin
+                assignedCategoryId: parseInt(assignedCategoryId), // Département spécifique
+            },
+            include: {
+                assignedCategory: true,
+                company: true
+            }
+        });
+
+        // 5. Réponse (sans le mot de passe)
+        const { password: _, ...hrData } = newHR;
+        res.status(201).json({
+            message: "Compte RH créé avec succès et assigné au département.",
+            user: hrData
+        });
+
+    } catch (error) {
+        console.error("Create HR Error:", error);
+        res.status(500).json({ error: "Erreur lors de la création du compte RH." });
+    }
+};
 
 exports.uploadProfileCV = async (req, res) => {
     try {

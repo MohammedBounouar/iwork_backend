@@ -18,6 +18,9 @@ router.get('/profile', authMiddleware, (req, res) => {
     res.json({ message: "Welcome!", user: req.user });
 }); 
 
+// Route pour créer un HR
+router.post('/create-hr', authMiddleware, adminController.createHR);
+
 // Route pour uploader ou mettre à jour le CV du profil
 router.post('/upload-cv', authMiddleware, upload.single('cv'), userController.uploadProfileCV);
 
