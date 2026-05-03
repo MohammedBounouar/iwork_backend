@@ -109,37 +109,6 @@ exports.register = async (req, res) => {
     }
 };
 
-//create The Rh by admin
-exports.createRH = async (req, res) => {
-    try {
-        const { email, password, firstName, lastName } = req.body;
-        const adminId = req.user.id;
-
-        const adminData = await prisma.user.findUnique({ where: { id: adminId } });
-
-        // Safety: Check if Admin has a company first
-        if (!adminData.companyId) {
-            return res.status(400).json({ error: "Vous devez créer une entreprise avant d'ajouter des RH" });
-        }
-
-        const newRH = await prisma.user.create({
-            data: {
-                email,
-                password: await bcrypt.hash(password, 10),
-                firstName,
-                lastName,
-                role: 'HR',
-                companyId: adminData.companyId,
-                adminId: adminId // This fills the 'admin' relation in your schema
-            }
-        });
-        
-        res.status(201).json(newRH);
-    } catch (error) {
-        res.status(500).json({ error: "Erreur lors de la création du compte RH" });
-    }
-};
-
 
 //login
 exports.login = async (req, res) => {
@@ -238,6 +207,105 @@ exports.createHR = async (req, res) => {
         res.status(500).json({ error: "Erreur lors de la création du compte RH." });
     }
 };
+/**
+ * @desc    Permet à un ADMIN ou HR de modifier un compte HR
+ *          - ADMIN peut modifier n'importe quel HR de son entreprise
+ *          - HR peut modifier uniquement son propre compte
+ * @route   PUT /api/admin/update-hr/:id
+ * @access  Private (ADMIN ou HR)
+ */
+exports.updateHR = async (req, res) => {
+    try {
+        const { id } = req.params;           // ID du HR à modifier
+        const requester = req.user;           // Utilisateur connecté (ADMIN ou HR)
+        const { email, password, firstName, lastName, assignedCategoryId } = req.body;
+
+        // 1. Vérification des droits d'accès
+        const isAdmin = requester.role === 'ADMIN';
+        const isHRSelf = requester.role === 'HR' && requester.id === parseInt(id);
+
+        if (!isAdmin && !isHRSelf) {
+            return res.status(403).json({
+                error: "Accès refusé. Vous ne pouvez modifier que votre propre compte."
+            });
+        }
+
+        // 2. Récupérer le HR cible et vérifier qu'il existe
+        const targetHR = await prisma.user.findUnique({ where: { id: parseInt(id) } });
+
+        if (!targetHR || targetHR.role !== 'HR') {
+            return res.status(404).json({ error: "Compte RH introuvable." });
+        }
+
+        // 3. Sécurité : un ADMIN ne peut modifier que les HR de sa propre entreprise
+        if (isAdmin && targetHR.companyId !== requester.companyId) {
+            return res.status(403).json({
+                error: "Accès refusé. Ce RH n'appartient pas à votre entreprise."
+            });
+        }
+
+        // 4. Construire dynamiquement l'objet de mise à jour (champs optionnels)
+        const updateData = {};
+
+        if (firstName !== undefined)          updateData.firstName = firstName;
+        if (lastName !== undefined)           updateData.lastName = lastName;
+
+        if (email !== undefined) {
+            // Vérifier que le nouvel email n'est pas déjà pris par un AUTRE utilisateur
+            const emailTaken = await prisma.user.findFirst({
+                where: {
+                    email,
+                    NOT: { id: parseInt(id) }   // Exclure l'utilisateur lui-même
+                }
+            });
+            if (emailTaken) {
+                return res.status(400).json({ error: "Cet email est déjà utilisé par un autre compte." });
+            }
+            updateData.email = email;
+        }
+
+        if (password !== undefined) {
+            const salt = await bcrypt.genSalt(10);
+            updateData.password = await bcrypt.hash(password, salt);
+        }
+
+        // 5. Seul l'ADMIN peut changer la catégorie/département
+        if (assignedCategoryId !== undefined) {
+            if (!isAdmin) {
+                return res.status(403).json({
+                    error: "Accès refusé. Seul l'administrateur peut modifier le département."
+                });
+            }
+            updateData.assignedCategoryId = parseInt(assignedCategoryId);
+        }
+
+        // 6. Aucun champ fourni ?
+        if (Object.keys(updateData).length === 0) {
+            return res.status(400).json({ error: "Aucun champ à mettre à jour fourni." });
+        }
+
+        // 7. Mise à jour en base
+        const updatedHR = await prisma.user.update({
+            where: { id: parseInt(id) },
+            data: updateData,
+            include: {
+                assignedCategory: true,
+                company: true
+            }
+        });
+
+        const { password: _, ...hrData } = updatedHR;
+        res.status(200).json({
+            message: "Compte RH mis à jour avec succès.",
+            user: hrData
+        });
+
+    } catch (error) {
+        console.error("Update HR Error:", error);
+        res.status(500).json({ error: "Erreur lors de la mise à jour du compte RH." });
+    }
+};
+
 
 exports.uploadProfileCV = async (req, res) => {
     try {

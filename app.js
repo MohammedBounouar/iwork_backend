@@ -2,6 +2,7 @@ require('dotenv').config(); // 1. Load env first
 const express = require('express');
 const path = require('path'); // 2. Required for static files
 const prisma = require('./config/prisma'); // 3. Required for syncCategories
+const cors = require('cors');
 
 // Routes
 const userRoutes = require('./routes/userRoutes'); 
@@ -13,6 +14,7 @@ const applicationRoutes = require('./routes/applicationRoutes');
 const CATEGORIES = require('./constants/categories');
 
 const app = express();
+app.use(cors());
 
 // Middlewares
 app.use(express.json());
