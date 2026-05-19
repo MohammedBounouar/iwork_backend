@@ -6,6 +6,8 @@ CREATE TABLE `User` (
     `firstName` VARCHAR(191) NULL,
     `lastName` VARCHAR(191) NULL,
     `role` ENUM('ADMIN', 'HR', 'CANDIDAT') NOT NULL DEFAULT 'CANDIDAT',
+    `assignedCategoryId` INTEGER NULL,
+    `curriculum_vitae` VARCHAR(191) NULL,
     `adminId` INTEGER NULL,
     `companyId` INTEGER NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -74,6 +76,9 @@ CREATE TABLE `SavedJob` (
 
     PRIMARY KEY (`userId`, `jobId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- AddForeignKey
+ALTER TABLE `User` ADD CONSTRAINT `User_assignedCategoryId_fkey` FOREIGN KEY (`assignedCategoryId`) REFERENCES `Category`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `User` ADD CONSTRAINT `User_adminId_fkey` FOREIGN KEY (`adminId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;

@@ -1,9 +1,9 @@
-const prisma = require('../config/prisma');
-const CATEGORIES = require('../constants/categories');
+import prisma from '../config/prisma.js';
+import CATEGORIES from '../constants/categories.js';
 
 
 // Get All categories profile
-exports.getAllCategories = async (req, res) => {
+export const getAllCategories = async (req, res) => {
     try {
         // Fetch from the DB (which was just synced by your constant file)
         const categories = await prisma.category.findMany({

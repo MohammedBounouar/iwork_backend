@@ -60,10 +60,18 @@ model Company {
   description String?  @db.Text
   website     String?
   location    String?
-  
-  users       User[]   // The Admin and all HRs linked to this company
-  jobs        Job[]    // All job offers under this brand
-  
+
+  // ✅ New fields
+  foundedYear Int?       
+  size        Int?       
+  tags        String?   
+  linkedin    String?    
+  twitter     String?    
+  github      String?    
+
+  users       User[]
+  jobs        Job[]
+
   createdAt   DateTime @default(now())
 }
 

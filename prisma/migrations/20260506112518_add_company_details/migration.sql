@@ -1,0 +1,7 @@
+-- AlterTable
+ALTER TABLE `company` ADD COLUMN `foundedYear` INTEGER NULL,
+    ADD COLUMN `github` VARCHAR(191) NULL,
+    ADD COLUMN `linkedin` VARCHAR(191) NULL,
+    ADD COLUMN `size` INTEGER NULL,
+    ADD COLUMN `tags` VARCHAR(191) NULL,
+    ADD COLUMN `twitter` VARCHAR(191) NULL;

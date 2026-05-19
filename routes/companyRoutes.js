@@ -1,17 +1,34 @@
-const express = require('express');
+import express from "express";
 const router = express.Router();
-const companyController = require('../controllers/companyController');
-const { authMiddleware } = require('../middleware/authMiddleware');
 
-const upload = require('../config/multerConfig');
+import * as companyController from "../controllers/companyController.js";
+import { authMiddleware } from "../middleware/authMiddleware.js";
+import upload from "../config/multerConfig.js";
 
-// Create company (Admin only)
+/**
+ * CHECK IF USER HAS COMPANY
+ * GET /api/companies/check
+ */
+router.get("/check", authMiddleware, companyController.checkCompany);
 
-router.post('/', authMiddleware, upload.single('logo'), companyController.createCompany);
+/**
+ * CREATE COMPANY (ADMIN ONLY)
+ * POST /api/companies
+ */
+router.post(
+  "/",
+  authMiddleware,
+  upload.single("logo"),
+  companyController.createCompany
+);
 
-// Get company details (Public - for candidates to see who is hiring)
-// router.get('/:id', companyController.getCompanyById);
-// The :name here must match req.params.name in the controller
-router.get('/search/:name', companyController.searchCompany);
+/**
+ * SEARCH COMPANY BY NAME
+ * GET /api/companies/search/:name
+ */
+router.get("/search/:name", companyController.searchCompany);
 
-module.exports = router;
+router.get("/my-company", authMiddleware , companyController . getMyCompany);
+router.put("/", authMiddleware , upload.single("logo") , companyController . updateCompany);
+
+export default router;

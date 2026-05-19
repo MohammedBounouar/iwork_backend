@@ -41,4 +41,4 @@ const CATEGORIES = [
     "Immobilier & Gestion de Biens"
 ];
 
-module.exports = CATEGORIES;
+export default CATEGORIES;

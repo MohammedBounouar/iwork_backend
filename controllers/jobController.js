@@ -1,8 +1,8 @@
-const prisma = require('../config/prisma');
+import prisma from '../config/prisma.js';
 
 
 // create an offer
-exports.createOffer = async (req, res) => {
+export const createOffer = async (req, res) => {
     try {
         const { title, description, location, salary, categoryId } = req.body;
         
@@ -45,7 +45,7 @@ exports.createOffer = async (req, res) => {
 };
 
 // update an offer
-exports.updateOffer = async (req, res) => {
+export const updateOffer = async (req, res) => {
     try {
         const { id } = req.params;
         const { title, description, location, salary, categoryId } = req.body;
@@ -98,7 +98,7 @@ exports.updateOffer = async (req, res) => {
 };
 
 // Get all offers for "jobs Feed" + Global Keyword Search
-exports.getAllOffers = async (req, res) => {
+export const getAllOffers = async (req, res) => {
     try {
         const { category, search } = req.query;
 
@@ -136,7 +136,7 @@ exports.getAllOffers = async (req, res) => {
  * @route   GET /api/jobs/company/:companyId
  */
 
-exports.getOffersByCompany = async (req, res) => {
+export const getOffersByCompany = async (req, res) => {
     try {
         // On récupère l'ID depuis les params pour une URL propre : /company/5
         const { companyId } = req.params; 
@@ -164,8 +164,65 @@ exports.getOffersByCompany = async (req, res) => {
     }
 };
 
+
+export const getOffersGroupedByAuthor = async (req, res) => {
+    try {
+        const { companyId } = req.params;
+
+        if (!companyId) {
+            return res.status(400).json({ error: "L'ID de l'entreprise est requis." });
+        }
+
+        const offers = await prisma.job.findMany({
+            where: {
+                companyId: parseInt(companyId),
+                isActive: true
+            },
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        email: true
+                    }
+                },
+                category: { select: { name: true } },
+                company: { select: { name: true, logo: true } },
+                _count: {                          
+                select: { applications: true }
+            }
+                
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        // 👇 GROUPING LOGIC
+        const grouped = offers.reduce((acc, offer) => {
+            const authorId = offer.author.id;
+
+            if (!acc[authorId]) {
+                acc[authorId] = {
+                    author: offer.author,
+                    offers: []
+                };
+            }
+
+            acc[authorId].offers.push(offer);
+            return acc;
+        }, {});
+
+        res.status(200).json(grouped);
+
+    } catch (error) {
+        console.error("Error grouping offers:", error);
+        res.status(500).json({ error: "Erreur lors du groupement des offres." });
+    }
+};
+
+
 //delete an offer by id
-exports.deleteOffer = async (req, res) => {
+export const deleteOffer = async (req, res) => {
     try {
         
         const jobId = parseInt(req.params.id); 

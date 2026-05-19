@@ -1,8 +1,8 @@
-const express = require('express');
+import express from "express";
 const router = express.Router();
-const upload = require('../middleware/uploadConfig');
-const applicationsController = require('../controllers/applicationsController');
-const { authMiddleware } = require('../middleware/authMiddleware');
+import upload from "../middleware/uploadConfig.js";
+import * as applicationsController from "../controllers/applicationsController.js";
+import { authMiddleware } from "../middleware/authMiddleware.js";
 
 // --- ROUTES CANDIDAT ---
 
@@ -18,6 +18,4 @@ router.get('/my-department', authMiddleware, applicationsController.getDepartmen
 // Mettre à jour le statut d'une candidature (Accepté, Refusé, etc.)
 router.patch('/:id/status', authMiddleware, applicationsController.updateApplicationStatus);
 
-module.exports = router;
-
-module.exports = router;
+export default router;

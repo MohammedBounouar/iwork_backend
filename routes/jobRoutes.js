@@ -1,14 +1,17 @@
-const express = require('express');
+import express from "express";
 const router = express.Router();
-const jobController = require('../controllers/jobController');
-const { authMiddleware } = require('../middleware/authMiddleware');
+import * as jobController from '../controllers/jobController.js';
+import  { authMiddleware } from '../middleware/authMiddleware.js';
 
 
 router.get('/', jobController.getAllOffers);
-router.get('/company/:companyId', jobController.getOffersByCompany);
+
+// 🔐 Protected route
+router.get('/job/:companyId', jobController.getOffersByCompany);
+router.get('/job/grouped-by-author/:companyId', authMiddleware, jobController.getOffersGroupedByAuthor);
 // Create offer (Admin HR)
 router.post('/', authMiddleware, jobController.createOffer);
 router.delete('/delete/:id', authMiddleware, jobController.deleteOffer);
 
 
-module.exports = router;  
+export default router;

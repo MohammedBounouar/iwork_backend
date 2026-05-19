@@ -1,47 +1,65 @@
-require('dotenv').config(); // 1. Load env first
-const express = require('express');
-const path = require('path'); // 2. Required for static files
-const prisma = require('./config/prisma'); // 3. Required for syncCategories
-const cors = require('cors');
+import dotenv from "dotenv";
+dotenv.config();
+
+import express from "express";
+import path from "path";
+import cors from "cors";
+
+import prisma from "./config/prisma.js";
 
 // Routes
-const userRoutes = require('./routes/userRoutes'); 
-const categoryRoutes = require('./routes/categoryRoutes'); 
-const companyRoutes = require('./routes/companyRoutes'); 
-const jobRoutes = require('./routes/jobRoutes');
-const applicationRoutes = require('./routes/applicationRoutes');
+import userRoutes from "./routes/userRoutes.js";
+import categoryRoutes from "./routes/categoryRoutes.js";
+import companyRoutes from "./routes/companyRoutes.js";
+import jobRoutes from "./routes/jobRoutes.js";
+import applicationRoutes from "./routes/applicationRoutes.js";
+import aiRoutes from "./routes/ai.routes.js";
+import dashboardRoutes from "./routes/dashboardRoutes.js";
 
-const CATEGORIES = require('./constants/categories');
+import CATEGORIES from "./constants/categories.js";
 
 const app = express();
-app.use(cors());
 
-// Middlewares
+app.use(cors({
+  origin: "http://localhost:3001",
+  credentials: true
+}));
 app.use(express.json());
-// Serve the uploads folder so images are accessible via URL
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Routes
-app.use('/api/users', userRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/companies', companyRoutes);
-app.use('/api/jobs', jobRoutes);
-app.use('/api/applications', applicationRoutes);
+// static files
+app.use("/uploads", express.static(path.resolve("uploads")));
 
-// Category Synchronization Logic
+// API routes
+app.use("/api/users", userRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/company", companyRoutes);
+app.use("/api/jobs", jobRoutes);
+app.use("/api/applications", applicationRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+
+// AI route
+app.use("/ai", aiRoutes);
+
+// --------------------
+// Sync categories
+// --------------------
 async function syncCategories() {
-    console.log("🔄 Syncing categories...");
-    for (const name of CATEGORIES) {
-        await prisma.category.upsert({
-            where: { name: name },
-            update: {}, // If it exists, change nothing
-            create: { name: name } // If it's missing, add it
-        });
-    }
-    console.log("✅ Categories are synchronized.");
+  console.log("🔄 Syncing categories...");
+
+  for (const name of CATEGORIES) {
+    await prisma.category.upsert({
+      where: { name },
+      update: {},
+      create: { name }
+    });
+  }
+
+  console.log("✅ Categories synchronized");
 }
 
-// Call this before app.listen
+// Start server
 syncCategories().then(() => {
-    app.listen(3000, () => console.log('Server running on port 3000'));
+  app.listen(3000, () => {
+    console.log("🚀 Server running on port 3000");
+  });
 });

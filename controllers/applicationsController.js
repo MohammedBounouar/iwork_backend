@@ -1,4 +1,4 @@
-const prisma = require('../config/prisma');
+import prisma from '../config/prisma.js';
 
 /**
  * @desc    Permet à un candidat de postuler à une offre
@@ -10,7 +10,7 @@ const prisma = require('../config/prisma');
  * @route   POST /api/applications/apply
  * @access  Private (Candidat uniquement)
  */
-exports.applyJob = async (req, res) => {
+export const applyJob = async (req, res) => {
     try {
         const { jobId } = req.body;
         const candidateId = req.user.id;
@@ -71,7 +71,7 @@ exports.applyJob = async (req, res) => {
  * @route   GET /api/applications/my-department
  */
 
-exports.getDepartmentApplications = async (req, res) => {
+export const getDepartmentApplications = async (req, res) => {
     try {
         const hr = req.user; // L'utilisateur connecté (Admin ou HR)
 
@@ -109,7 +109,7 @@ exports.getDepartmentApplications = async (req, res) => {
  * @desc    Mettre à jour le statut d'une candidature (Accepté/Refusé)
  * @route   PATCH /api/applications/:id/status
  */
-exports.updateApplicationStatus = async (req, res) => {
+export const updateApplicationStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body; // "accepted", "rejected", "reviewed"
