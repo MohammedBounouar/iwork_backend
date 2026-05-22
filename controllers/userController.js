@@ -14,7 +14,8 @@ export const getMe = async (req, res) => {
                 firstName: true,
                 lastName: true,
                 role: true,
-                createdAt: true
+                createdAt: true,
+                curriculum_vitae: true
             }
         });
 
@@ -27,6 +28,63 @@ export const getMe = async (req, res) => {
         console.error(error);
         res.status(500).json({ error: "Erreur lors de la récupération du profil" });
     }
+};
+
+/**
+ * @desc    Mettre à jour les informations textuelles du profil utilisateur
+ * @route   PUT /api/users/update-profile
+ * @access  Private
+ */
+export const updateMyProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { firstName, lastName, email } = req.body;
+
+    // 1. Validation de base
+    if (!firstName || !lastName || !email) {
+      return res.status(400).json({ error: "Tous les champs sont obligatoires." });
+    }
+
+    // 2. Vérification si l'email est déjà pris par un autre utilisateur
+    const emailExists = await prisma.user.findFirst({
+      where: {
+        email,
+        NOT: { id: userId }
+      }
+    });
+
+    if (emailExists) {
+      return res.status(400).json({ error: "Cette adresse e-mail est déjà utilisée." });
+    }
+
+    // 3. Mise à jour de l'utilisateur
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        firstName,
+        lastName,
+        email
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        createdAt: true,
+        curriculum_vitae: true // Inclus pour conserver l'état du CV côté Front
+      }
+    });
+
+    return res.status(200).json({
+      message: "Profil mis à jour avec succès !",
+      user: updatedUser
+    });
+
+  } catch (error) {
+    console.error("Update Profile Error:", error);
+    return res.status(500).json({ error: "Erreur serveur lors de la mise à jour du profil." });
+  }
 };
 
 // Récupérer un utilisateur spécifique par son ID
@@ -398,5 +456,37 @@ export const uploadProfileCV = async (req, res) => {
         res.status(200).json({ message: "CV mis à jour", cv: updatedUser.curriculum_vitae });
     } catch (error) {
         res.status(500).json({ error: "Erreur lors de l'upload" });
+    }
+};
+
+export const deleteProfileCV = async (req, res) => {
+    try {
+        // 1. Récupérer l'utilisateur
+        const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+
+        if (!user) {
+            return res.status(404).json({ message: "Utilisateur non trouvé" });
+        }
+
+        // 2. Supprimer le fichier physique du serveur s'il existe
+        if (user.curriculum_vitae && fs.existsSync(user.curriculum_vitae)) {
+            try {
+                fs.unlinkSync(user.curriculum_vitae);
+            } catch (fsErr) {
+                console.error("Erreur lors de la suppression physique du fichier :", fsErr);
+            }
+        }
+
+        // 3. Mettre à jour la base de données en remettant le champ à null
+        await prisma.user.update({
+            where: { id: req.user.id },
+            data: { curriculum_vitae: null }
+        });
+
+        return res.status(200).json({ message: "CV supprimé avec succès" });
+
+    } catch (error) {
+        console.error("Erreur deleteProfileCV:", error);
+        return res.status(500).json({ message: "Une erreur est survenue lors de la suppression." });
     }
 };

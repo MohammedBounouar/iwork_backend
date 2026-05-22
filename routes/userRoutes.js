@@ -17,6 +17,7 @@ router.get('/me', authMiddleware, userController.getMe);
 router.get('/profile', authMiddleware, (req, res) => {
     res.json({ message: "Welcome!", user: req.user });
 }); 
+router.put('/update-profile', authMiddleware, userController.updateMyProfile);
 
 // Route pour créer un HR
 router.post('/create-hr', authMiddleware, userController.createHR);
@@ -25,6 +26,7 @@ router.delete('/delete-hr/:id', authMiddleware, userController.deleteHR);
 router.get('/my-hr', authMiddleware, userController.getAllHRByAdmin);
 
 // Route pour uploader ou mettre à jour le CV du profil
-router.post('/upload-cv', authMiddleware, upload.single('cv'), userController.uploadProfileCV);
+router.post('/upload-cv', authMiddleware, upload.single('document'), userController.uploadProfileCV);
+router.delete('/delete-cv', authMiddleware, userController.deleteProfileCV);
 
 export default router;

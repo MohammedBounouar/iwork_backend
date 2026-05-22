@@ -113,6 +113,7 @@ model Application {
   jobId       Int
   candidateId Int
   cvUrl       String   // Storage link to the PDF
+  coverLetter String?
   status      String   @default("pending") // pending, reviewed, accepted, rejected
   
   job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)

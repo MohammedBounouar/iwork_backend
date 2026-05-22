@@ -7,7 +7,7 @@ import { authMiddleware } from "../middleware/authMiddleware.js";
 // --- ROUTES CANDIDAT ---
 
 // Postuler à une offre (Utilise le CV du profil)
-router.post('/apply', authMiddleware, applicationsController.applyJob);
+router.post('/apply/:jobId', authMiddleware, applicationsController.applyJob);
 
 
 // --- ROUTES RECRUTEUR (HR & ADMIN) ---
